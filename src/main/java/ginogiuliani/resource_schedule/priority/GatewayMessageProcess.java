@@ -11,7 +11,7 @@ public class GatewayMessageProcess implements Runnable {
 	private static ConcurrentHashMap<Integer, LinkedBlockingQueue<Message>> groupedMsgQueues;
 	
 	private static Object iteratorlock = new Object();
-	private static Object queuelock = new Object();
+	private int thrNum;
 
 	public GatewayMessageProcess(ConcurrentHashMap<Integer, LinkedBlockingQueue<Message>> groupedMsgQueues) {
 		GatewayMessageProcess.groupedMsgQueues = groupedMsgQueues;
@@ -19,16 +19,17 @@ public class GatewayMessageProcess implements Runnable {
 		synchronized (iteratorlock) {
 			if (sharedGroupIterator == null) {
 				sharedGroupIterator = groupedMsgQueues.keySet().iterator();
-			}
+				thrNum = 0;
+			}else
+				thrNum= 1;
 		}
-
 	}
 
 	public void run() {
 		while (true) {
 			int groupNum = 0;
 			boolean groupSet = false;
-			synchronized (iteratorlock) {
+			synchronized (sharedGroupIterator) {
 				if (!sharedGroupIterator.hasNext()) {
 					sharedGroupIterator = groupedMsgQueues.keySet().iterator();
 				} else if (sharedGroupIterator.hasNext()) {
@@ -38,10 +39,14 @@ public class GatewayMessageProcess implements Runnable {
 			}
 			if (groupSet)
 				try {
-					LinkedBlockingQueue<Message> queue = groupedMsgQueues.get(groupNum);
-					synchronized (queuelock) {
+					LinkedBlockingQueue<Message> queue        = groupedMsgQueues.get(groupNum);
+					System.out.println("Thread: "+ thrNum);
+					synchronized (queue) {
 						while (!queue.isEmpty()) {
-							queue.take().completed();
+							
+							Message msg = queue.take();
+							msg.appendMessage("Thread: "+ thrNum);
+							msg.completed();
 						}
 					}
 

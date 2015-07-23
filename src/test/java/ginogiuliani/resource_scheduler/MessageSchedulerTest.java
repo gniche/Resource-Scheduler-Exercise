@@ -19,7 +19,7 @@ public class MessageSchedulerTest {
 	private MessageScheduler scheduler;
 	private Message[] messages;
 
-	private final int NUMBER_OF_MESSAGES_SENT = 50;
+	private final int NUMBER_OF_MESSAGES_SENT = 1000;
 
 	/**
 	 * Create the test case

@@ -16,6 +16,11 @@ public class MessageImp implements Message, Comparable<MessageImp> {
 		System.out.println(text + " Completed");
 	}
 
+	public int getGroupID() {
+		return GROUP_ID;
+	}
+	
+	
 	public int compareTo(MessageImp msg) {
 		if (msg.GROUP_ID < GROUP_ID)
 			return -1;
@@ -23,9 +28,9 @@ public class MessageImp implements Message, Comparable<MessageImp> {
 			return 1;
 		return 0;
 	}
-
-	public int getGroupID() {
-		return GROUP_ID;
+	
+	public void appendMessage(String message){
+		text = text + ". " + message;
 	}
 
 }
