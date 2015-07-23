@@ -1,34 +1,46 @@
 package ginogiuliani.resource_scheduler;
 
+import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.PriorityBlockingQueue;
+import java.util.concurrent.Future;
 
 public class MessageScheduler {
 
-	private final int NUMBER_OF_RESOURCES;
 	private final ExecutorService exec;
-	private final PriorityBlockingQueue<Message> queue;
+	private final ArrayBlockingQueue<Message> queue;
 	protected boolean running = true;
 	private int messagesRecieved = 0;
 
-	public MessageScheduler(int allocatedResources, Gateway gateway) throws IllegalArgumentException {
+	public MessageScheduler(int allocatedResources, final Gateway gateway) throws IllegalArgumentException {
 		if (allocatedResources < 2 || gateway == null) {
 			throw new IllegalArgumentException();
 		}
-		NUMBER_OF_RESOURCES = allocatedResources;
-		queue = new PriorityBlockingQueue<Message>(NUMBER_OF_RESOURCES);
-		exec = Executors.newFixedThreadPool((int) (NUMBER_OF_RESOURCES / 2));
-		while(true)
-			exec.submit(new MessageTask<Boolean>(queue, gateway));
+
+		queue = new ArrayBlockingQueue<Message>(allocatedResources);
+		exec = Executors.newFixedThreadPool((int) (allocatedResources / 2));
+		
+		int i = 0;
+		
+		Thread schedulerThread = new Thread("Scheduler") {
+			public void run() {
+				while (true) {
+					Future<Boolean> skip = exec.submit(new MessageTask<Boolean>(queue, gateway));
+				}
+			}
+		};
+		schedulerThread.start();
+
 	}
 
 	public void recieve(Message message) {
-		synchronized (this) {
-			messagesRecieved++;
+		messagesRecieved++;
+		try {
+			queue.put(message);
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
-		;
-		queue.add(message);
 	}
 
 	int recieved() {

@@ -1,10 +1,13 @@
 package ginogiuliani.resource_scheduler;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertTrue;
 
-import org.junit.*;
+import java.util.Random;
+
+import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 
 /**
@@ -12,12 +15,11 @@ import org.mockito.MockitoAnnotations;
  */
 public class MessageSchedulerTest {
 
-	private static final int NUMBER_OF_RESOURCES = 4;
+	private static final int NUMBER_OF_RESOURCES = 10;
 	private MessageScheduler scheduler;
 	private Message[] messages;
 
-	private final int NUMBER_OF_MESSAGES_SENT = 10;
-	private int groupID = 10;
+	private final int NUMBER_OF_MESSAGES_SENT = 50;
 
 	/**
 	 * Create the test case
@@ -27,17 +29,23 @@ public class MessageSchedulerTest {
 	 */
 
 	@Mock
-	Gateway gateway;
-	@Mock
 	Message message;
 
 	@Before
 	public void init() {
 		MockitoAnnotations.initMocks(this);
-		scheduler = new MessageScheduler(NUMBER_OF_RESOURCES, gateway);
+		final GatewayImp gateway = new GatewayImp(2);
+		Thread schedulerThread = new Thread("Scheduler") {
+			public void run() {
+				scheduler = new MessageScheduler(NUMBER_OF_RESOURCES, gateway);
+			}
+		};
+		schedulerThread.start();
 		messages = new Message[NUMBER_OF_MESSAGES_SENT];
 		for (int i = 0; i < NUMBER_OF_MESSAGES_SENT; i++) {
-			messages[i] = new MessageImp(null, groupID);
+			Random rand = new Random();
+			int randomGroupID =  rand.nextInt(4);
+			messages[i] = new MessageImp("Message: " + i + " Group: " + randomGroupID, randomGroupID);
 		}
 	}
 
@@ -46,21 +54,18 @@ public class MessageSchedulerTest {
 	 */
 	@Test
 	public void test_if_queued_when_mesage_recieved() {
+		System.out.println("test_if_queued_when_mesage_recieved()");
+		Mockito.when(message.getGroupID()).thenReturn(2);
+
 		int i = 1;
 		for (Message message : messages) {
 			scheduler.recieve(message);
-			System.out.println("messages " + i++);
 		}
-		int messagesRecieved = scheduler.recieved();
 
-		assertTrue(NUMBER_OF_MESSAGES_SENT == messagesRecieved);
+		assertTrue(NUMBER_OF_MESSAGES_SENT == scheduler.recieved());
 	}
 
 	/**
 	 * Rigourous Test :-)
 	 */
-	@Test
-	public void testApp() {
-		assertTrue(true);
-	}
 }

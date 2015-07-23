@@ -2,7 +2,7 @@ package ginogiuliani.resource_scheduler;
 
 public class MessageImp implements Message, Comparable<MessageImp> {
 
-	private final int GROUP_ID;
+	public int GROUP_ID;
 	private String text;
 
 	public MessageImp(String text, int groupID) throws IllegalArgumentException {
@@ -13,7 +13,7 @@ public class MessageImp implements Message, Comparable<MessageImp> {
 	}
 
 	public void completed() {
-		// TODO Auto-generated method stub
+		System.out.println(text + " Completed");
 	}
 
 	public int compareTo(MessageImp msg) {
